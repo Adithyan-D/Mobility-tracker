@@ -25,31 +25,31 @@ DATA_SOURCE = os.getenv("DATA_SOURCE", "auto")
 
 CITY_CONFIG: dict[str, dict[str, Any]] = {
     "all": {
-        "label": "🌐 All Cities (Comparative Overview)",
+        "label": "All Cities (Comparative Overview)",
         "lat": 39.5,
         "lon": -98.35,
         "zoom": 3.8,
     },
     "nyc": {
-        "label": "🍎 New York City (Citi Bike)",
+        "label": "New York City (Citi Bike)",
         "lat": 40.75,
         "lon": -73.97,
         "zoom": 10.5,
     },
     "chicago": {
-        "label": "🏙️ Chicago (Divvy)",
+        "label": "Chicago (Divvy)",
         "lat": 41.88,
         "lon": -87.63,
         "zoom": 10.5,
     },
     "dc": {
-        "label": "🏛️ Washington, D.C. (Capital Bikeshare)",
+        "label": "Washington, D.C. (Capital Bikeshare)",
         "lat": 38.90,
         "lon": -77.03,
         "zoom": 11.0,
     },
     "sf": {
-        "label": "🌉 San Francisco Bay Area (Bay Wheels)",
+        "label": "San Francisco Bay Area (Bay Wheels)",
         "lat": 37.65,
         "lon": -122.25,
         "zoom": 9.5,  # Encompasses SF, Oakland, and San Jose
