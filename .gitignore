@@ -27,3 +27,8 @@ dbt/.user.yml
 .idea/
 .vscode/
 *.log
+
+# Internal planning artifacts
+IMPLEMENTATION_PLAN.md
+MULTI_CITY_UPSCALE_PLAN.md
+WALKTHROUGH.md
