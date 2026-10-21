@@ -1,0 +1,74 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Raw per-station GBFS JSON records written as Hive-partitioned Parquet by ingest.py
+      (partition keys: city=<city>, batch_id=<batch_id>).
+    meta:
+      external_location: "read_parquet('../data/raw/{name}/city=*/**/*.parquet', hive_partitioning=true)"
+    tables:
+      - name: station_information
+        description: "GBFS station_information feed (static station attributes)."
+      - name: station_status
+        description: "GBFS station_status feed (periodic availability snapshots)."
+
+models:
+  - name: stg_station_information
+    description: "Typed, deduplicated station_information records (one row per station per batch per city)."
+    columns:
+      - name: global_station_id
+        description: "Composite surrogate key: city || '-' || station_id."
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: station_id
+        tests:
+          - not_null
+      - name: latitude
+        tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 35.0
+                max_value: 45.0
+      - name: longitude
+        tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: -125.0
+                max_value: -70.0
+      - name: capacity
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: stg_station_status
+    description: "Typed, deduplicated station_status records (one row per station per batch per city)."
+    columns:
+      - name: global_station_id
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: station_id
+        tests:
+          - not_null
+      - name: last_reported_at
+        tests:
+          - not_null
+      - name: num_bikes_available
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+      - name: num_docks_available
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0

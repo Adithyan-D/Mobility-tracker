@@ -1,0 +1,10 @@
+# Pinned for Python 3.12 (verified resolution: dbt-core 1.12.6 / dbt-duckdb 1.11.0)
+httpx==0.28.1
+duckdb==1.5.6
+dbt-core==1.12.6
+dbt-duckdb==1.11.0
+streamlit==1.66.0
+pandas==2.3.3
+pyarrow==26.0.0
+plotly==6.9.0
+pydeck==0.9.3

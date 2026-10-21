@@ -1,0 +1,101 @@
+name: gbfs-pipeline
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: gbfs-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  PYTHONUNBUFFERED: "1"
+  RAW_RETENTION_DAYS: "14"
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore artifacts from the data branch
+        run: |
+          mkdir -p data/raw data/marts
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth=1 origin data
+            git worktree add --force ../data-restore origin/data
+            cp -r ../data-restore/raw/. data/raw/ 2>/dev/null || true
+            cp -r ../data-restore/marts/. data/marts/ 2>/dev/null || true
+            echo "Restored existing artifacts from the data branch"
+          else
+            echo "data branch not found; starting fresh"
+          fi
+
+      - name: Ingest GBFS feeds
+        run: python ingest.py
+
+      - name: dbt build (models + tests)
+        working-directory: dbt
+        run: dbt build --profiles-dir .
+
+      - name: Export marts to Parquet
+        run: python export_marts.py
+
+      - name: Publish artifacts to the data branch
+        run: |
+          set -euo pipefail
+          git worktree add --force ../data-tree --detach
+          cd ../data-tree
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth=1 origin data
+            git checkout -B data origin/data
+          else
+            git checkout --orphan data
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          rm -rf raw marts
+          cp -r "${GITHUB_WORKSPACE}/data/raw" ./raw
+          cp -r "${GITHUB_WORKSPACE}/data/marts" ./marts
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No artifact changes to publish"
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='github-actions[bot]@users.noreply.github.com' \
+              commit -m "data: snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # Rebase onto any concurrent data-branch updates before pushing to
+          # avoid non-fast-forward rejections and runner lockouts.
+          git pull --rebase origin data || true
+          git push origin HEAD:data
+
+      - name: Alert on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="GBFS pipeline failure"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          existing=$(gh issue list --state open --search "${title} in:title" \
+            --limit 1 --json number --jq '.[0].number // empty')
+          body="Pipeline failed on $(date -u +%Y-%m-%dT%H:%M:%SZ).\n\nRun: ${run_url}"
+          if [ -n "${existing}" ]; then
+            gh issue comment "${existing}" --body "${body}"
+          else
+            gh issue create --title "${title}" --body "${body}"
+          fi

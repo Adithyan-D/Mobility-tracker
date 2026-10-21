@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: dim_stations
+    description: "Station dimension: one row per station across all cities with latest static attributes."
+    columns:
+      - name: global_station_id
+        description: "Primary key (city || '-' || station_id)."
+        tests:
+          - unique
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: station_id
+        tests:
+          - not_null
+      - name: station_name
+        tests:
+          - not_null
+      - name: latitude
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 35.0
+                max_value: 45.0
+      - name: longitude
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: -125.0
+                max_value: -70.0
+      - name: capacity
+        tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: fct_station_snapshots
+    description: "Periodic per-station status snapshots, one row per (global_station_id, batch)."
+    tests:
+      - unique:
+          arguments:
+            column_name: "global_station_id || '-' || coalesce(cast(batch_id as varchar), '')"
+    columns:
+      - name: global_station_id
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: batch_id
+        tests:
+          - not_null
+      - name: snapshot_at
+        tests:
+          - not_null
+      - name: local_snapshot_at
+        tests:
+          - not_null
+      - name: num_bikes_available
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 200
+      - name: num_docks_available
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 200
+      - name: utilization_rate
+        description: >
+          Bikes available divided by nominal capacity. Valet / overflow stations can
+          exceed 1.0, so this is a warning-level test rather than an error.
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                where: "capacity > 0"
+              config:
+                severity: warn
+
+  - name: agg_hourly_metrics
+    description: "Hourly per-station aggregation of utilization, starvation and overflow events."
+    columns:
+      - name: metric_hour
+        tests:
+          - not_null
+      - name: local_hour
+        tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 23
+      - name: global_station_id
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: snapshot_count
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+      - name: avg_utilization_rate
+        tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                where: "avg_utilization_rate is not null"
+              config:
+                severity: warn

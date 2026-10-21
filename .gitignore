@@ -1,0 +1,29 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Local warehouse + generated raw data (raw partition batches)
+warehouse.duckdb
+warehouse.duckdb.wal
+*.duckdb
+*.duckdb.wal
+data/raw/
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/.user.yml
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Env / editor
+.env
+.idea/
+.vscode/
+*.log
