@@ -1,4 +1,10 @@
 # Global Real-Time Mobility Observatory
+<img width="1920" height="836" alt="image" src="https://github.com/user-attachments/assets/e0ccd9ef-f745-4733-a597-00be08f337d0" />
+<img width="1920" height="836" alt="image" src="https://github.com/user-attachments/assets/dd01b9ee-3f23-40a6-af6a-914f33c607c1" />
+<img width="1920" height="836" alt="image" src="https://github.com/user-attachments/assets/2fccd1e1-3486-459b-bede-11facb5323cc" />
+<img width="1920" height="836" alt="image" src="https://github.com/user-attachments/assets/6d2926a9-9f01-4b1e-b6bb-3648e94baf31" />
+
+
 
 End-to-end, **zero-cost** production data pipeline and analytics dashboard tracking real-time
 public micro-mobility networks across major metropolitan areas using open **GBFS** feeds:
